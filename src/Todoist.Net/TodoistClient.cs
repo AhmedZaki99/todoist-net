@@ -80,6 +80,7 @@ namespace Todoist.Net
             Sharing = new SharingService(this);
             Emails = new EmailService(this);
             Sections = new SectionService(this);
+            Authorization = new AuthorizationService(this);
         }
 
         /// <summary>
@@ -179,6 +180,12 @@ namespace Todoist.Net
         /// </summary>
         /// <value>The users.</value>
         public IUsersService Users { get; }
+
+        /// <summary>
+        /// Gets the authorization service.
+        /// </summary>
+        /// <value>The authorization service.</value>
+        public IAuthorizationService Authorization { get; }
 
         /// <summary>
         /// Creates the transaction.

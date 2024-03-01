@@ -120,6 +120,14 @@ namespace Todoist.Net
         ISectionService Sections { get; }
 
         /// <summary>
+        /// Gets the authorization service.
+        /// </summary>
+        /// <value>
+        /// The authorization service.
+        /// </value>
+        IAuthorizationService Authorization { get; }
+
+        /// <summary>
         /// Creates the transaction.
         /// </summary>
         /// <returns>The transaction.</returns>
