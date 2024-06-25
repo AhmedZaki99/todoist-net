@@ -15,6 +15,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y%m%d%H%M%S')"
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -27,6 +30,6 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Create the package
-        run: dotnet pack --configuration Release --no-build -o nupkgs --version-suffix fix
+        run: dotnet pack --configuration Release --no-build -o nupkgs --version-suffix fix${{ steps.date.outputs.date }}
       - name: Publish the package to GPR
         run: dotnet nuget push nupkgs/*.nupkg
