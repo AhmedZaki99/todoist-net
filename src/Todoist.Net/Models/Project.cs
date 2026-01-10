@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 
 namespace Todoist.Net.Models
@@ -12,9 +13,20 @@ namespace Todoist.Net.Models
         /// Initializes a new instance of the <see cref="Project"/> class.
         /// </summary>
         /// <param name="name">The name.</param>
+        /// <exception cref="ArgumentException">Value cannot be null or empty. - name</exception>
         public Project(string name)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentException("Value cannot be null or empty.", nameof(name));
+            }
+
             Name = name;
+        }
+
+        [JsonConstructor]
+        internal Project()
+        {
         }
 
         /// <summary>
