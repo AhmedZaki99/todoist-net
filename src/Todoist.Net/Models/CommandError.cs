@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 
 namespace Todoist.Net.Models
@@ -5,6 +6,9 @@ namespace Todoist.Net.Models
     /// <summary>
     /// Represents a command execution error returned by the Todoist API.
     /// </summary>
+#if NETFRAMEWORK
+    [Serializable]
+#endif
     public class CommandError
     {
         /// <summary>
