@@ -11,7 +11,7 @@ namespace Todoist.Net.Services
     /// <seealso cref="Todoist.Net.Services.SharingCommandService" />
     internal class SharingService : SharingCommandService, ISharingService
     {
-        public SharingService(IAdvancedTodoistClient todoistClient)
+        internal SharingService(IAdvancedTodoistClient todoistClient)
             : base(todoistClient)
         {
         }

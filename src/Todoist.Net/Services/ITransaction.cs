@@ -11,11 +11,11 @@ namespace Todoist.Net.Services
     public interface ITransaction
     {
         /// <summary>
-        /// Gets or sets the filters.
+        /// Gets the filters.
         /// </summary>
         /// <value>The filters.</value>
         /// <remarks>Filters are only available for Todoist Premium users.</remarks>
-        IFiltersCommandService Filters { get; set; }
+        IFiltersCommandService Filters { get; }
 
         /// <summary>
         /// Gets the items service.

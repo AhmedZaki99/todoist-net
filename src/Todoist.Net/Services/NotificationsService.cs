@@ -8,13 +8,8 @@ namespace Todoist.Net.Services
 {
     internal class NotificationsService : NotificationsCommandService, INotificationsService
     {
-        public NotificationsService(IAdvancedTodoistClient todoistClient)
+        internal NotificationsService(IAdvancedTodoistClient todoistClient)
             : base(todoistClient)
-        {
-        }
-
-        public NotificationsService(ICollection<Command> queue)
-            : base(queue)
         {
         }
 

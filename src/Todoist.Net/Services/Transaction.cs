@@ -38,7 +38,7 @@ namespace Todoist.Net.Services
             Sharing = new SharingCommandService(_commands);
         }
 
-        public IFiltersCommandService Filters { get; set; }
+        public IFiltersCommandService Filters { get; }
 
         public IItemsCommandService Items { get; }
 
