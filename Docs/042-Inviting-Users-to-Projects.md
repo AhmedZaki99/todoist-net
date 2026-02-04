@@ -1,5 +1,3 @@
-# Inviting Users to Projects
-
 # How to Invite a User to a Todoist Project Using curl
 
 This guide explains how to invite a user to collaborate on a Todoist project using the unified Todoist API v1 via curl commands.

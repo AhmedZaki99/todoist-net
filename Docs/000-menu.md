@@ -45,7 +45,7 @@ Complete documentation organized by category.
 - [Request-limits](039-Request-limits.md) - 42 lines
 - [Url-schemes](040-Url-schemes.md) - 236 lines
 - [Migrating-from-v9](041-Migrating-from-v9.md) - 273 lines
-- [Inviting-Users-to-Projects](042-Inviting-Users-to-Projects.md) - 290 lines
+- [Inviting-Users-to-Projects](042-Inviting-Users-to-Projects.md) - 288 lines
 
 ---
 
@@ -94,4 +94,4 @@ Complete documentation organized by category.
 | 39 | Request-limits | [039-Request-limits.md](039-Request-limits.md) | 42 |
 | 40 | Url-schemes | [040-Url-schemes.md](040-Url-schemes.md) | 236 |
 | 41 | Migrating-from-v9 | [041-Migrating-from-v9.md](041-Migrating-from-v9.md) | 273 |
-| 42 | Inviting-Users-to-Projects | [042-Inviting-Users-to-Projects.md](042-Inviting-Users-to-Projects.md) | 290 |
+| 42 | Inviting-Users-to-Projects | [042-Inviting-Users-to-Projects.md](042-Inviting-Users-to-Projects.md) | 288 |
