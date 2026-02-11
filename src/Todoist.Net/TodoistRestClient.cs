@@ -90,7 +90,7 @@ namespace Todoist.Net
             using (var content = new FormUrlEncodedContent(parameters))
             {
                 var query = await content.ReadAsStringAsync().ConfigureAwait(false);
-                requestUri = $"{resource}?{query}";
+                requestUri = string.IsNullOrEmpty(query) ? resource : $"{resource}?{query}";
             }
             return await _httpClient.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);
         }

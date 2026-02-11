@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Todoist.Net.Models
 {
@@ -22,6 +23,7 @@ namespace Todoist.Net.Models
         /// <value>
         /// The content of the comment.
         /// </value>
+        [JsonPropertyName("note")]
         public string Comment { get; set; }
 
         /// <summary>
@@ -30,7 +32,26 @@ namespace Todoist.Net.Models
         /// <value>
         /// The reminder.
         /// </value>
+        [JsonPropertyName("reminder")]
         public string Reminder { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to add the default reminder.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> to add the default reminder; otherwise, <c>false</c>.
+        /// </value>
+        [JsonPropertyName("auto_reminder")]
+        public bool? AutoReminder { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to include extra meta in the response.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> to include extra meta; otherwise, <c>false</c>.
+        /// </value>
+        [JsonPropertyName("meta")]
+        public bool? Meta { get; set; }
 
         /// <summary>
         /// Gets the text of the task that is parsed.
@@ -40,6 +61,7 @@ namespace Todoist.Net.Models
         /// The text.
         /// </value>
         /// <remarks>Example: Task1 @Label1 #Project1 +ExampleUser</remarks>
+        [JsonPropertyName("text")]
         public string Text { get; }
 
         internal ICollection<KeyValuePair<string, string>> ToParameters()

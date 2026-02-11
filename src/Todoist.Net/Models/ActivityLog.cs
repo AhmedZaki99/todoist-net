@@ -41,14 +41,14 @@ namespace Todoist.Net.Models
         /// </summary>
         /// <value>The initiator identifier.</value>
         [JsonPropertyName("initiator_id")]
-        public long? InitiatorId { get; internal set; }
+        public string InitiatorId { get; internal set; }
 
         /// <summary>
         /// Gets the object identifier.
         /// </summary>
         /// <value>The object identifier.</value>
         [JsonPropertyName("object_id")]
-        public long ObjectId { get; internal set; }
+        public string ObjectId { get; internal set; }
 
         /// <summary>
         /// Gets the type of the object.
@@ -62,13 +62,13 @@ namespace Todoist.Net.Models
         /// </summary>
         /// <value>The parent item identifier.</value>
         [JsonPropertyName("parent_item_id")]
-        public long? ParentItemId { get; internal set; }
+        public string ParentItemId { get; internal set; }
 
         /// <summary>
         /// Gets the parent project identifier.
         /// </summary>
         /// <value>The parent project identifier.</value>
         [JsonPropertyName("parent_project_id")]
-        public long? ParentProjectId { get; internal set; }
+        public string ParentProjectId { get; internal set; }
     }
 }

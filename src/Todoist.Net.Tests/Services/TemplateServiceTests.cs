@@ -27,7 +27,7 @@ namespace Todoist.Net.Tests.Services
         {
             var client = TodoistClientFactory.Create(_outputHelper);
 
-            var firstProject = (await client.Projects.GetAsync()).First();
+            var firstProject = (await client.Projects.GetAsync()).Results.First();
 
             var template = await client.Templates.ExportAsFileAsync(firstProject.Id);
 
@@ -48,7 +48,7 @@ namespace Todoist.Net.Tests.Services
         {
             var client = TodoistClientFactory.Create(_outputHelper);
 
-            var firstProject = (await client.Projects.GetAsync()).First();
+            var firstProject = (await client.Projects.GetAsync()).Results.First();
             var template = await client.Templates.ExportAsShareableUrlAsync(firstProject.Id);
 
             Assert.False(string.IsNullOrEmpty(template.FileUrl));

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,43 +20,75 @@ namespace Todoist.Net.Services
         }
 
         /// <inheritdoc/>
-        public Task<IEnumerable<Project>> GetArchivedAsync(CancellationToken cancellationToken = default)
+        public Task<PaginatedResponse<Project>> GetArchivedAsync(
+            string cursor = null,
+            int? limit = null,
+            CancellationToken cancellationToken = default)
         {
-            return TodoistClient.GetAsync<IEnumerable<Project>>(
-                "projects/get_archived",
+            var parameters = new List<KeyValuePair<string, string>>();
+
+            if (!string.IsNullOrEmpty(cursor))
+            {
+                parameters.Add(new KeyValuePair<string, string>("cursor", cursor));
+            }
+
+            if (limit.HasValue)
+            {
+                parameters.Add(new KeyValuePair<string, string>("limit", limit.Value.ToString()));
+            }
+
+            return TodoistClient.GetAsync<PaginatedResponse<Project>>(
+                "projects/archived",
+                parameters,
+                cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public Task<PaginatedResponse<Project>> GetAsync(
+            string cursor = null,
+            int? limit = null,
+            CancellationToken cancellationToken = default)
+        {
+            var parameters = new List<KeyValuePair<string, string>>();
+
+            if (!string.IsNullOrEmpty(cursor))
+            {
+                parameters.Add(new KeyValuePair<string, string>("cursor", cursor));
+            }
+
+            if (limit.HasValue)
+            {
+                parameters.Add(new KeyValuePair<string, string>("limit", limit.Value.ToString()));
+            }
+
+            return TodoistClient.GetAsync<PaginatedResponse<Project>>("projects", parameters, cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public Task<Project> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentException("Value cannot be null or empty.", nameof(id));
+            }
+
+            return TodoistClient.GetAsync<Project>(
+                $"projects/{id}",
                 new List<KeyValuePair<string, string>>(),
                 cancellationToken);
         }
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<Project>> GetAsync(CancellationToken cancellationToken = default)
+        public Task<ProjectFull> GetFullAsync(string id, CancellationToken cancellationToken = default)
         {
-            var response = await TodoistClient.GetResourcesAsync(cancellationToken, ResourceType.Projects).ConfigureAwait(false);
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentException("Value cannot be null or empty.", nameof(id));
+            }
 
-            return response.Projects;
-        }
-
-        /// <inheritdoc/>
-        public Task<ProjectInfo> GetAsync(ComplexId id, CancellationToken cancellationToken = default)
-        {
-            return TodoistClient.PostAsync<ProjectInfo>(
-                "projects/get",
-                new List<KeyValuePair<string, string>>
-                    {
-                        new KeyValuePair<string, string>("project_id", id.ToString())
-                    },
-                cancellationToken);
-        }
-
-        /// <inheritdoc/>
-        public Task<ProjectData> GetDataAsync(ComplexId id, CancellationToken cancellationToken = default)
-        {
-            return TodoistClient.PostAsync<ProjectData>(
-                "projects/get_data",
-                new List<KeyValuePair<string, string>>
-                    {
-                        new KeyValuePair<string, string>("project_id", id.ToString())
-                    },
+            return TodoistClient.GetAsync<ProjectFull>(
+                $"projects/{id}/full",
+                new List<KeyValuePair<string, string>>(),
                 cancellationToken);
         }
     }

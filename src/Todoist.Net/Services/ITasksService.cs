@@ -17,10 +17,11 @@ namespace Todoist.Net.Services
         /// <summary>
         /// Gets all tasks.
         /// </summary>
+        /// <param name="query">The query.</param>
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>The tasks.</returns>
         /// <exception cref="HttpRequestException">API exception.</exception>
-        Task<IEnumerable<DetailedTask>> GetAsync(CancellationToken cancellationToken = default);
+        Task<PaginatedResponse<DetailedTask>> GetAsync(TasksQuery query = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets a task by ID.
@@ -31,10 +32,10 @@ namespace Todoist.Net.Services
         /// The task.
         /// </returns>
         /// <exception cref="HttpRequestException">API exception.</exception>
-        Task<TaskInfo> GetAsync(ComplexId id, CancellationToken cancellationToken = default);
+        Task<DetailedTask> GetByIdAsync(string id, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Gets all the user's completed tasks.
+        /// Gets the user's completed tasks by completion date.
         /// </summary>
         /// <param name="filter">The filter.</param>
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -43,7 +44,40 @@ namespace Todoist.Net.Services
         /// </returns>
         /// <exception cref="HttpRequestException">API exception.</exception>
         /// <remarks>Only available for Todoist Premium users.</remarks>
-        Task<CompletedTasksInfo> GetCompletedAsync(TaskFilter filter = null, CancellationToken cancellationToken = default);
+        Task<PaginatedItemsResponse<DetailedTask>> GetCompletedByCompletionDateAsync(
+            CompletedTasksByCompletionDateFilter filter,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets the user's completed tasks by due date.
+        /// </summary>
+        /// <param name="filter">The filter.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>
+        /// The completed tasks.
+        /// </returns>
+        /// <exception cref="HttpRequestException">API exception.</exception>
+        /// <remarks>Only available for Todoist Premium users.</remarks>
+        Task<PaginatedItemsResponse<DetailedTask>> GetCompletedByDueDateAsync(
+            CompletedTasksByDueDateFilter filter,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Gets tasks matching a filter string.
+        /// </summary>
+        /// <param name="filter">The filter string.</param>
+        /// <param name="lang">The filter language.</param>
+        /// <param name="cursor">The pagination cursor.</param>
+        /// <param name="limit">The page size.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <returns>The filtered tasks.</returns>
+        /// <exception cref="HttpRequestException">API exception.</exception>
+        Task<PaginatedResponse<DetailedTask>> GetByFilterAsync(
+            string filter,
+            string lang = null,
+            string cursor = null,
+            int? limit = null,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Add a task. Implementation of the Quick Add Task available in the official clients.

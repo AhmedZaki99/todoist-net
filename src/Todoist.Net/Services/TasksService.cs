@@ -24,33 +24,97 @@ namespace Todoist.Net.Services
         }
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<DetailedTask>> GetAsync(CancellationToken cancellationToken = default)
+        public Task<PaginatedResponse<DetailedTask>> GetAsync(TasksQuery query = null, CancellationToken cancellationToken = default)
         {
-            var response = await TodoistClient.GetResourcesAsync(cancellationToken, ResourceType.Tasks).ConfigureAwait(false);
+            var parameters = query?.ToParameters() ?? new List<KeyValuePair<string, string>>();
 
-            return response.Tasks;
+            return TodoistClient.GetAsync<PaginatedResponse<DetailedTask>>("tasks", parameters, cancellationToken);
         }
 
         /// <inheritdoc/>
-        public Task<TaskInfo> GetAsync(ComplexId id, CancellationToken cancellationToken = default)
+        public Task<DetailedTask> GetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
-            return TodoistClient.PostAsync<TaskInfo>(
-                "items/get",
-                new List<KeyValuePair<string, string>>
-                    {
-                        new KeyValuePair<string, string>(
-                            "item_id",
-                            id.ToString())
-                    },
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentException("Value cannot be null or empty.", nameof(id));
+            }
+
+            return TodoistClient.GetAsync<DetailedTask>(
+                $"tasks/{id}",
+                new List<KeyValuePair<string, string>>(),
                 cancellationToken);
         }
 
         /// <inheritdoc/>
-        public Task<CompletedTasksInfo> GetCompletedAsync(TaskFilter filter = null, CancellationToken cancellationToken = default)
+        public Task<PaginatedItemsResponse<DetailedTask>> GetCompletedByCompletionDateAsync(
+            CompletedTasksByCompletionDateFilter filter,
+            CancellationToken cancellationToken = default)
         {
-            var parameters = filter == null ? new List<KeyValuePair<string, string>>() : filter.ToParameters();
+            if (filter == null)
+            {
+                throw new ArgumentNullException(nameof(filter));
+            }
 
-            return TodoistClient.GetAsync<CompletedTasksInfo>("completed/get_all", parameters, cancellationToken);
+            var parameters = filter.ToParameters();
+
+            return TodoistClient.GetAsync<PaginatedItemsResponse<DetailedTask>>(
+                "tasks/completed/by_completion_date",
+                parameters,
+                cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public Task<PaginatedItemsResponse<DetailedTask>> GetCompletedByDueDateAsync(
+            CompletedTasksByDueDateFilter filter,
+            CancellationToken cancellationToken = default)
+        {
+            if (filter == null)
+            {
+                throw new ArgumentNullException(nameof(filter));
+            }
+
+            var parameters = filter.ToParameters();
+
+            return TodoistClient.GetAsync<PaginatedItemsResponse<DetailedTask>>(
+                "tasks/completed/by_due_date",
+                parameters,
+                cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public Task<PaginatedResponse<DetailedTask>> GetByFilterAsync(
+            string filter,
+            string lang = null,
+            string cursor = null,
+            int? limit = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(filter))
+            {
+                throw new ArgumentException("Value cannot be null or empty.", nameof(filter));
+            }
+
+            var parameters = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("filter", filter)
+            };
+
+            if (!string.IsNullOrEmpty(lang))
+            {
+                parameters.Add(new KeyValuePair<string, string>("lang", lang));
+            }
+
+            if (!string.IsNullOrEmpty(cursor))
+            {
+                parameters.Add(new KeyValuePair<string, string>("cursor", cursor));
+            }
+
+            if (limit.HasValue)
+            {
+                parameters.Add(new KeyValuePair<string, string>("limit", limit.Value.ToString()));
+            }
+
+            return TodoistClient.GetAsync<PaginatedResponse<DetailedTask>>("tasks/filter", parameters, cancellationToken);
         }
 
         /// <inheritdoc/>
@@ -61,7 +125,7 @@ namespace Todoist.Net.Services
                 throw new ArgumentNullException(nameof(quickAddTask));
             }
 
-            return TodoistClient.PostAsync<DetailedTask>("quick/add", quickAddTask.ToParameters(), cancellationToken);
+            return TodoistClient.PostJsonAsync<DetailedTask>("tasks/quick", quickAddTask, cancellationToken);
         }
     }
 }

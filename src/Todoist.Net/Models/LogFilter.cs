@@ -26,7 +26,12 @@ namespace Todoist.Net.Models
         /// Gets or sets the initiator identifier.
         /// </summary>
         /// <value>The initiator identifier.</value>
-        public long? InitiatorId { get; set; }
+        public string InitiatorId { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to filter activities with no initiator.
+        /// </summary>
+        public bool? InitiatorIdNull { get; set; }
 
         /// <summary>
         /// Gets or sets the limit.
@@ -47,7 +52,7 @@ namespace Todoist.Net.Models
         /// Gets or sets the object identifier.
         /// </summary>
         /// <value>The object identifier.</value>
-        public long? ObjectId { get; set; }
+        public string ObjectId { get; set; }
 
         /// <summary>
         /// Gets or sets the type of the object.
@@ -56,30 +61,42 @@ namespace Todoist.Net.Models
         public string ObjectType { get; set; }
 
         /// <summary>
-        /// Gets or sets the offset.
-        /// </summary>
-        /// <value>The offset.</value>
-        public int? Offset { get; set; }
-
-        /// <summary>
         /// Gets or sets the parent item identifier.
         /// </summary>
         /// <value>The parent item identifier.</value>
-        public long? ParentItemId { get; set; }
+        public string ParentItemId { get; set; }
 
         /// <summary>
         /// Gets or sets the parent project identifier.
         /// </summary>
         /// <value>The parent project identifier.</value>
-        public long? ParentProjectId { get; set; }
+        public string ParentProjectId { get; set; }
 
         /// <summary>
-        /// Gets or sets the page.
+        /// <summary>
+        /// Gets or sets a value indicating whether to include parent object activities.
         /// </summary>
-        /// <value>
-        /// The page.
-        /// </value>
-        public long? Page { get; set; }
+        public bool? IncludeParentObject { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to include child object activities.
+        /// </summary>
+        public bool? IncludeChildObjects { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to annotate notes.
+        /// </summary>
+        public bool? AnnotateNotes { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to annotate parents.
+        /// </summary>
+        public bool? AnnotateParents { get; set; }
+
+        /// <summary>
+        /// Gets or sets the cursor.
+        /// </summary>
+        public string Cursor { get; set; }
 
         // ReSharper disable once FunctionComplexityOverflow
         internal ICollection<KeyValuePair<string, string>> ToParameters()
@@ -91,9 +108,9 @@ namespace Todoist.Net.Models
                 parameters.AddLast(new KeyValuePair<string, string>("object_type", ObjectType));
             }
 
-            if (ObjectId.HasValue)
+            if (!string.IsNullOrEmpty(ObjectId))
             {
-                parameters.AddLast(new KeyValuePair<string, string>("object_id", ObjectId.Value.ToString()));
+                parameters.AddLast(new KeyValuePair<string, string>("object_id", ObjectId));
             }
 
             if (!string.IsNullOrEmpty(EventType))
@@ -107,35 +124,57 @@ namespace Todoist.Net.Models
                     new KeyValuePair<string, string>("object_event_types", $"[{string.Join(",", ObjectEventTypes)}]"));
             }
 
-            if (ParentProjectId.HasValue)
+            if (!string.IsNullOrEmpty(ParentProjectId))
+            {
+                parameters.AddLast(new KeyValuePair<string, string>("parent_project_id", ParentProjectId));
+            }
+
+            if (!string.IsNullOrEmpty(ParentItemId))
+            {
+                parameters.AddLast(new KeyValuePair<string, string>("parent_item_id", ParentItemId));
+            }
+
+            if (!string.IsNullOrEmpty(InitiatorId))
+            {
+                parameters.AddLast(new KeyValuePair<string, string>("initiator_id", InitiatorId));
+            }
+
+            if (InitiatorIdNull.HasValue)
             {
                 parameters.AddLast(
-                    new KeyValuePair<string, string>("parent_project_id", ParentProjectId.Value.ToString()));
+                    new KeyValuePair<string, string>("initiator_id_null", InitiatorIdNull == true ? "true" : "false"));
             }
 
-            if (ParentItemId.HasValue)
+            if (IncludeParentObject.HasValue)
             {
-                parameters.AddLast(new KeyValuePair<string, string>("parent_item_id", ParentItemId.Value.ToString()));
+                parameters.AddLast(
+                    new KeyValuePair<string, string>("include_parent_object", IncludeParentObject == true ? "true" : "false"));
             }
 
-            if (InitiatorId.HasValue)
+            if (IncludeChildObjects.HasValue)
             {
-                parameters.AddLast(new KeyValuePair<string, string>("initiator_id", InitiatorId.Value.ToString()));
+                parameters.AddLast(
+                    new KeyValuePair<string, string>("include_child_objects", IncludeChildObjects == true ? "true" : "false"));
             }
 
-            if (Page.HasValue)
+            if (AnnotateNotes.HasValue)
             {
-                parameters.AddLast(new KeyValuePair<string, string>("page", Page.Value.ToString()));
+                parameters.AddLast(new KeyValuePair<string, string>("annotate_notes", AnnotateNotes == true ? "true" : "false"));
+            }
+
+            if (AnnotateParents.HasValue)
+            {
+                parameters.AddLast(new KeyValuePair<string, string>("annotate_parents", AnnotateParents == true ? "true" : "false"));
+            }
+
+            if (!string.IsNullOrEmpty(Cursor))
+            {
+                parameters.AddLast(new KeyValuePair<string, string>("cursor", Cursor));
             }
 
             if (Limit.HasValue)
             {
                 parameters.AddLast(new KeyValuePair<string, string>("limit", Limit.Value.ToString()));
-            }
-
-            if (Offset.HasValue)
-            {
-                parameters.AddLast(new KeyValuePair<string, string>("offset", Offset.Value.ToString()));
             }
 
             return parameters;

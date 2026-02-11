@@ -19,6 +19,6 @@ namespace Todoist.Net.Services
         /// <returns>The activity log entries.</returns>
         /// <exception cref="HttpRequestException">API exception.</exception>
         /// <remarks>The activity log is only available for Todoist Premium.</remarks>
-        Task<Activity> GetAsync(LogFilter filter = null, CancellationToken cancellationToken = default);
+        Task<PaginatedResponse<LogEntry>> GetAsync(LogFilter filter = null, CancellationToken cancellationToken = default);
     }
 }

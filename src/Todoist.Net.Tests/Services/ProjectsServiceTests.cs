@@ -32,7 +32,7 @@ namespace Todoist.Net.Tests.Services
             {
                 var projects = await client.Projects.GetAsync();
 
-                Assert.Contains(projects, p => p.Name == projectName);
+                Assert.Contains(projects.Results, p => p.Name == projectName);
             }
             finally
             {
@@ -40,7 +40,7 @@ namespace Todoist.Net.Tests.Services
             }
             var otherProjects = await client.Projects.GetAsync();
 
-            Assert.DoesNotContain(otherProjects, p => p.Name == projectName);
+            Assert.DoesNotContain(otherProjects.Results, p => p.Name == projectName);
         }
 
         [Fact]
@@ -101,13 +101,13 @@ namespace Todoist.Net.Tests.Services
             try
             {
                 await client.Projects.ArchiveAsync(newProject.Id);
-                var projectInfo = await client.Projects.GetAsync(newProject.Id);
-                Assert.True(projectInfo.Project.IsArchived);
+                var projectInfo = await client.Projects.GetByIdAsync(newProject.Id.ToString());
+                Assert.True(projectInfo.IsArchived);
 
 
                 await client.Projects.UnarchiveAsync(newProject.Id);
-                projectInfo = await client.Projects.GetAsync(newProject.Id);
-                Assert.False(projectInfo.Project.IsArchived);
+                projectInfo = await client.Projects.GetByIdAsync(newProject.Id.ToString());
+                Assert.False(projectInfo.IsArchived);
             }
             finally
             {
@@ -129,9 +129,9 @@ namespace Todoist.Net.Tests.Services
             await transaction.CommitAsync();
             try
             {
-                var projectData = await client.Projects.GetDataAsync(projectId);
+                var projectData = await client.Projects.GetFullAsync(projectId.ToString());
 
-                Assert.Single(projectData.Tasks);
+                Assert.NotNull(projectData.Tasks);
             }
             finally
             {

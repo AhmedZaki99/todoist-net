@@ -482,3 +482,6 @@ fabric.properties
 
 # Claude
 .claude/
+
+# Serena
+.serena/

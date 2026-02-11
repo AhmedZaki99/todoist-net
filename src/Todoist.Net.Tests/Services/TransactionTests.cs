@@ -35,9 +35,9 @@ namespace Todoist.Net.Tests.Services
             var syncToken = await transaction.CommitAsync();
             try
             {
-                var projectInfo = await client.Projects.GetAsync(project.Id);
+                var commentsInfo = await client.Comments.GetAsync();
 
-                Assert.True(projectInfo.Comments.Count > 0);
+                Assert.Contains(commentsInfo.ProjectComments, c => c.Id == comment.Id);
                 Assert.NotNull(syncToken);
             }
             finally
@@ -75,11 +75,10 @@ namespace Todoist.Net.Tests.Services
                 Assert.False(string.IsNullOrEmpty(task.Id.PersistentId));
 
 
-                var taskInfo = await client.Tasks.GetAsync(task.Id);
+                var taskInfo = await client.Tasks.GetByIdAsync(task.Id.ToString());
 
-                Assert.Equal(taskInfo.Task.Content, task.Content);
-                Assert.Equal(taskInfo.Project.Name, project.Name);
-                Assert.Equal(taskInfo.Project.Id.PersistentId, project.Id.PersistentId);
+                Assert.Equal(taskInfo.Content, task.Content);
+                Assert.Equal(taskInfo.ProjectId?.PersistentId, project.Id.PersistentId);
             }
             finally
             {
@@ -87,7 +86,7 @@ namespace Todoist.Net.Tests.Services
             }
             var projects = await client.Projects.GetAsync();
 
-            Assert.DoesNotContain(projects, p => p.Id.PersistentId == project.Id.PersistentId);
+            Assert.DoesNotContain(projects.Results, p => p.Id.PersistentId == project.Id.PersistentId);
         }
 
         [Fact]
@@ -117,11 +116,10 @@ namespace Todoist.Net.Tests.Services
                 Assert.False(string.IsNullOrEmpty(task.Id.PersistentId));
 
 
-                var taskInfo = await client.Tasks.GetAsync(task.Id);
+                var taskInfo = await client.Tasks.GetByIdAsync(task.Id.ToString());
 
-                Assert.Equal(taskInfo.Task.Content, task.Content);
-                Assert.Equal(taskInfo.Project.Name, project.Name);
-                Assert.Equal(taskInfo.Project.Id.PersistentId, project.Id.PersistentId);
+                Assert.Equal(taskInfo.Content, task.Content);
+                Assert.Equal(taskInfo.ProjectId?.PersistentId, project.Id.PersistentId);
             }
             finally
             {
@@ -129,7 +127,7 @@ namespace Todoist.Net.Tests.Services
             }
             var projects = await client.Projects.GetAsync();
 
-            Assert.DoesNotContain(projects, p => p.Id.PersistentId == project.Id.PersistentId);
+            Assert.DoesNotContain(projects.Results, p => p.Id.PersistentId == project.Id.PersistentId);
         }
 
     }

@@ -331,6 +331,42 @@ namespace Todoist.Net
             return ProcessRawPostAsync(resource, parameters, cancellationToken);
         }
 
+        /// <inheritdoc/>
+        Task<string> IAdvancedTodoistClient.GetRawAsync(
+            string resource,
+            ICollection<KeyValuePair<string, string>> parameters,
+            CancellationToken cancellationToken)
+        {
+            return ProcessRawGetAsync(resource, parameters, cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        Task<T> IAdvancedTodoistClient.PostJsonAsync<T>(
+            string resource,
+            object content,
+            CancellationToken cancellationToken)
+        {
+            return ProcessJsonAsync<T>(_restClient.PostJsonAsync, resource, content, cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        Task<T> IAdvancedTodoistClient.PutJsonAsync<T>(
+            string resource,
+            object content,
+            CancellationToken cancellationToken)
+        {
+            return ProcessJsonAsync<T>(_restClient.PutAsync, resource, content, cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        Task<string> IAdvancedTodoistClient.DeleteRawAsync(
+            string resource,
+            ICollection<KeyValuePair<string, string>> parameters,
+            CancellationToken cancellationToken)
+        {
+            return ProcessRawDeleteAsync(resource, parameters, cancellationToken);
+        }
+
 
         /// <summary>
         /// Processes the form asynchronous.
@@ -394,6 +430,60 @@ namespace Todoist.Net
             CancellationToken cancellationToken)
         {
             var response = await _restClient.PostAsync(resource, parameters, cancellationToken)
+                                .ConfigureAwait(false);
+
+            var responseContent = await ReadResponseAsync(response, cancellationToken)
+                                      .ConfigureAwait(false);
+            return responseContent;
+        }
+
+        private async Task<string> ProcessRawGetAsync(
+            string resource,
+            ICollection<KeyValuePair<string, string>> parameters,
+            CancellationToken cancellationToken)
+        {
+            var response = await _restClient.GetAsync(resource, parameters, cancellationToken)
+                                .ConfigureAwait(false);
+
+            var responseContent = await ReadResponseAsync(response, cancellationToken)
+                                      .ConfigureAwait(false);
+            return responseContent;
+        }
+
+        private async Task<T> ProcessJsonAsync<T>(
+            Func<string, string, CancellationToken, Task<HttpResponseMessage>> requestFunc,
+            string resource,
+            object content,
+            CancellationToken cancellationToken)
+        {
+            var jsonContent = JsonSerializer.Serialize(content, _serializerOptions);
+            var response = await requestFunc(resource, jsonContent, cancellationToken)
+                                .ConfigureAwait(false);
+
+            var responseContent = await ReadResponseAsync(response, cancellationToken)
+                                      .ConfigureAwait(false);
+
+            return DeserializeResponse<T>(responseContent);
+        }
+
+        private async Task<string> ProcessRawDeleteAsync(
+            string resource,
+            ICollection<KeyValuePair<string, string>> parameters,
+            CancellationToken cancellationToken)
+        {
+            if (parameters == null)
+            {
+                throw new ArgumentNullException(nameof(parameters));
+            }
+
+            var requestUri = string.Empty;
+            using (var content = new FormUrlEncodedContent(parameters))
+            {
+                var query = await content.ReadAsStringAsync().ConfigureAwait(false);
+                requestUri = string.IsNullOrEmpty(query) ? resource : $"{resource}?{query}";
+            }
+
+            var response = await _restClient.DeleteAsync(requestUri, cancellationToken)
                                 .ConfigureAwait(false);
 
             var responseContent = await ReadResponseAsync(response, cancellationToken)

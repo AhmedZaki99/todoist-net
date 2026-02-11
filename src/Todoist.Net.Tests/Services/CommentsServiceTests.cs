@@ -82,15 +82,15 @@ namespace Todoist.Net.Tests.Services
 
                 await client.Comments.AddToProjectAsync(comment, project.Id.PersistentId);
 
-                var projectInfo = await client.Projects.GetAsync(project.Id);
-                var attachedComment = projectInfo.Comments.FirstOrDefault();
+                var commentsInfo = await client.Comments.GetAsync();
+                var attachedComment = commentsInfo.ProjectComments.FirstOrDefault(c => c.Id == comment.Id);
                 Assert.NotNull(attachedComment);
                 Assert.True(attachedComment.FileAttachment.FileName == fileName);
 
                 await client.Comments.DeleteAsync(attachedComment.Id);
 
-                projectInfo = await client.Projects.GetAsync(project.Id);
-                Assert.Empty(projectInfo.Comments);
+                commentsInfo = await client.Comments.GetAsync();
+                Assert.DoesNotContain(commentsInfo.ProjectComments, c => c.Id == comment.Id);
             }
             finally
             {
