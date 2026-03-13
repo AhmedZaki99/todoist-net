@@ -1,0 +1,52 @@
+name: Publish to NuGet
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.x
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Build and Pack
+      run: .\build.cmd nuget-pack --configuration Release
+
+    - name: Upload NuGet package
+      uses: actions/upload-artifact@v4
+      with:
+          path: artifacts/*.nupkg
+
+    - name: NuGet login (OIDC → temp API key)
+      uses: NuGet/login@v1
+      id: login
+      with:
+          user: ${{ secrets.NUGET_USER }}
+
+    - name: NuGet push
+      run: |
+          $packages = Get-ChildItem -Path artifacts/*.nupkg
+          if ($packages.Count -ne 1) {
+            throw "Expected exactly 1 package, found $($packages.Count)"
+          }
+          dotnet nuget push $packages[0].FullName --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+      shell: pwsh

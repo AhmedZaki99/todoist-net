@@ -1,22 +1,20 @@
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Xunit.Abstractions;
+using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 
 namespace Todoist.Net.Tests
 {
     public sealed class RateLimitAwareRestClient : ITodoistRestClient
     {
-        private readonly ITestOutputHelper _outputHelper;
+        private const int MaxRetryCount = 60;
+        private const string RateLimitResetHeaderName = "x-ratelimit-reset";
 
+        private static readonly TimeSpan _defaultCooldown = TimeSpan.FromSeconds(30);
+
+        private readonly ITestOutputHelper? _outputHelper;
         private readonly TodoistRestClient _restClient;
 
-        public RateLimitAwareRestClient(string token, ITestOutputHelper outputHelper)
+        public RateLimitAwareRestClient(string token, ITestOutputHelper? outputHelper = null)
         {
             _outputHelper = outputHelper;
             _restClient = new TodoistRestClient(token);
@@ -27,79 +25,135 @@ namespace Todoist.Net.Tests
             _restClient?.Dispose();
         }
 
-        public async Task<HttpResponseMessage> ExecuteRequest(Func<Task<HttpResponseMessage>> request)
+        public Task<HttpResponseMessage> GetAsync(string resource, Dictionary<string, string>? queryParams = null, CancellationToken cancellationToken = default)
         {
-            HttpResponseMessage result;
+            return ExecuteRequest(ct => _restClient.GetAsync(resource, queryParams, ct), cancellationToken);
+        }
 
+        public Task<HttpResponseMessage> PostAsync(string resource, Dictionary<string, string>? formParams = null, CancellationToken cancellationToken = default)
+        {
+            return ExecuteRequest(ct => _restClient.PostAsync(resource, formParams, ct), cancellationToken);
+        }
+
+        public Task<HttpResponseMessage> PostFilesAsync(string resource, UploadFile[] files, Dictionary<string, string>? formParams = null, CancellationToken cancellationToken = default)
+        {
+            return ExecuteRequest(ct => _restClient.PostFilesAsync(resource, files, formParams, ct), cancellationToken);
+        }
+
+        public Task<HttpResponseMessage> PostJsonAsync(string resource, string jsonContent, CancellationToken cancellationToken = default)
+        {
+            return ExecuteRequest(ct => _restClient.PostJsonAsync(resource, jsonContent, ct), cancellationToken);
+        }
+
+        public Task<HttpResponseMessage> PutAsync(string resource, CancellationToken cancellationToken = default)
+        {
+            return ExecuteRequest(ct => _restClient.PutAsync(resource, ct), cancellationToken);
+        }
+
+        public Task<HttpResponseMessage> PutJsonAsync(string resource, string jsonContent, CancellationToken cancellationToken = default)
+        {
+            return ExecuteRequest(ct => _restClient.PutJsonAsync(resource, jsonContent, ct), cancellationToken);
+        }
+
+        public Task<HttpResponseMessage> DeleteAsync(string resource, Dictionary<string, string>? queryParams = null, CancellationToken cancellationToken = default)
+        {
+            return ExecuteRequest(ct => _restClient.DeleteAsync(resource, queryParams, ct), cancellationToken);
+        }
+
+
+        private async Task<HttpResponseMessage> ExecuteRequest(Func<CancellationToken, Task<HttpResponseMessage>> request, CancellationToken cancellationToken = default)
+        {
             // For each user, you can make a maximum of 450 requests within a 15 minute period.
-            const int maxRetryCount = 35;
             int retryCount = 0;
-            do
+            while (true)
             {
-                result = await request().ConfigureAwait(false);
-                if ((int)result.StatusCode != 429 /*Requests limit*/  &&
-                    (int)result.StatusCode < 500 /*Server side errors happen randomly*/)
+                var result = await request(cancellationToken).ConfigureAwait(false);
+
+                // TooManyRequests (429) and randomly-occurring server errors (5xx) are retriable, others are not.
+                if ((int)result.StatusCode is not 429 and < 500)
                 {
                     return result;
                 }
 
-                var cooldown = await GetRateLimitCooldown(result).ConfigureAwait(false);
                 retryCount++;
+                if (retryCount > MaxRetryCount)
+                {
+                    LoggerMessage("[{0:G}] Stopping retries after max retry count ({1}).", DateTime.UtcNow, MaxRetryCount);
+                    return result;
+                }
+                var cooldown = await GetRateLimitCooldownAsync(result, cancellationToken).ConfigureAwait(false);
 
-                _outputHelper.WriteLine("[{0:G}] Received [{1}] status code from Todoist API, retry #{2} in {3}", DateTime.UtcNow, result.StatusCode, retryCount, cooldown);
-                await Task.Delay(cooldown);
+                LoggerMessage("[{0:G}] Received [{1}] status code from Todoist API, retry #{2} in {3}", DateTime.UtcNow, result.StatusCode, retryCount, cooldown);
+
+                result.Dispose();
+                await Task.Delay(cooldown, cancellationToken).ConfigureAwait(false);
             }
-            while (retryCount < maxRetryCount);
-
-            return result;
         }
 
-        public async Task<HttpResponseMessage> GetAsync(
-            string resource,
-            IEnumerable<KeyValuePair<string, string>> parameters,
-            CancellationToken cancellationToken = default)
+        private static async Task<TimeSpan> GetRateLimitCooldownAsync(HttpResponseMessage response, CancellationToken cancellationToken = default)
         {
-            return await ExecuteRequest(() => _restClient.GetAsync(resource, parameters, cancellationToken)).ConfigureAwait(false);
-        }
+            if (response.Headers.RetryAfter?.Delta is { } retryAfterDelta)
+            {
+                return retryAfterDelta;
+            }
 
-        public async Task<HttpResponseMessage> PostAsync(
-            string resource,
-            IEnumerable<KeyValuePair<string, string>> parameters,
-            CancellationToken cancellationToken = default)
-        {
-            return await ExecuteRequest(() => _restClient.PostAsync(resource, parameters, cancellationToken)).ConfigureAwait(false);
-        }
+            if (response.Headers.TryGetValues(RateLimitResetHeaderName, out var resetValues))
+            {
+                var resetValue = resetValues.FirstOrDefault();
+                if (long.TryParse(resetValue, out var resetUnixSeconds))
+                {
+                    var resetAt = DateTimeOffset.FromUnixTimeSeconds(resetUnixSeconds);
 
-        public async Task<HttpResponseMessage> PostFormAsync(
-            string resource,
-            IEnumerable<KeyValuePair<string, string>> parameters,
-            IEnumerable<ByteArrayContent> files,
-            CancellationToken cancellationToken = default)
-        {
-            return await ExecuteRequest(() => _restClient.PostFormAsync(resource, parameters, files, cancellationToken))
-                       .ConfigureAwait(false);
-        }
+                    var remaining = resetAt - DateTimeOffset.UtcNow;
+                    if (remaining <= TimeSpan.Zero)
+                    {
+                        return TimeSpan.FromSeconds(1);
+                    }
+                    return remaining;
+                }
+            }
 
-        public async Task<TimeSpan> GetRateLimitCooldown(HttpResponseMessage response)
-        {
-            var defaultCooldown = TimeSpan.FromSeconds(30);
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 try
                 {
-                    var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    JObject json = JObject.Parse(content);
+                    var errorResponse = await response.Content.ReadFromJsonAsync<RateLimitErrorResponse>(cancellationToken: cancellationToken)
+                        .ConfigureAwait(false);
 
-                    return TimeSpan.FromSeconds(json["error_extra"]!["retry_after"]!.Value<double>());
+                    var retryAfterSeconds = errorResponse?.ErrorExtra?.RetryAfter ?? _defaultCooldown.TotalSeconds;
+                    return TimeSpan.FromSeconds(retryAfterSeconds);
                 }
                 catch
                 {
-                    return defaultCooldown;
+                    return _defaultCooldown;
                 }
             }
 
             // Default cooldown
-            return defaultCooldown;
+            return _defaultCooldown;
+        }
+
+        private void LoggerMessage(string format, params object[] args)
+        {
+            if (_outputHelper is not null)
+            {
+                _outputHelper.WriteLine(format, args);
+                return;
+            }
+            TestContext.Current.SendDiagnosticMessage(format, args);
+        }
+
+
+        private sealed record RateLimitErrorResponse
+        {
+            [JsonPropertyName("error_extra")]
+            public ErrorExtraInfo? ErrorExtra { get; init; }
+        }
+
+        private sealed record ErrorExtraInfo
+        {
+            [JsonPropertyName("retry_after")]
+            public double? RetryAfter { get; init; }
         }
     }
 }

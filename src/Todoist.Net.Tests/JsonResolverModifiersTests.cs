@@ -1,14 +1,9 @@
-using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 
-using Todoist.Net.Models;
 using Todoist.Net.Serialization.Resolvers;
-using Todoist.Net.Tests.Extensions;
-
-using Xunit;
 
 namespace Todoist.Net.Tests
 {
@@ -20,16 +15,17 @@ namespace Todoist.Net.Tests
             HashSet<PropertyInfo> IUnsettableProperties.UnsetProperties { get; } = [];
 
             [JsonPropertyName("first_property")]
-            public string Property1 { get; set; }
+            public string? Property1 { get; set; }
 
             [JsonPropertyName("second_property")]
             public int? Property2 { get; set; }
 
             [JsonPropertyName("third_property")]
+            // ReSharper disable once UnusedMember.Local
             public bool? Property3 { get; set; }
         }
 
-        private static readonly JsonSerializerOptions _serializerOptions = new()
+        private static readonly JsonSerializerOptions SerializerOptions = new()
         {
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             TypeInfoResolver = new DefaultJsonTypeInfoResolver
@@ -47,7 +43,7 @@ namespace Todoist.Net.Tests
                 Property1 = "Test"
             };
 
-            var json = JsonSerializer.Serialize(model, _serializerOptions);
+            var json = JsonSerializer.Serialize(model, SerializerOptions);
 
             Assert.Contains("\"first_property\":\"Test\"", json);
             Assert.DoesNotContain("second_property", json);
@@ -58,7 +54,7 @@ namespace Todoist.Net.Tests
                 Property2 = 5
             };
 
-            json = JsonSerializer.Serialize(model, _serializerOptions);
+            json = JsonSerializer.Serialize(model, SerializerOptions);
 
             Assert.Contains("\"second_property\":5", json);
             Assert.DoesNotContain("first_property", json);
@@ -74,7 +70,7 @@ namespace Todoist.Net.Tests
             };
             model.Unset(x => x.Property2);
 
-            var json = JsonSerializer.Serialize(model, _serializerOptions);
+            var json = JsonSerializer.Serialize(model, SerializerOptions);
 
             Assert.Contains("\"first_property\":\"Test\"", json);
             Assert.Contains("\"second_property\":null", json);
@@ -86,7 +82,7 @@ namespace Todoist.Net.Tests
             };
             model.Unset(x => x.Property1);
 
-            json = JsonSerializer.Serialize(model, _serializerOptions);
+            json = JsonSerializer.Serialize(model, SerializerOptions);
 
             Assert.Contains("\"first_property\":null", json);
             Assert.Contains("\"second_property\":5", json);
