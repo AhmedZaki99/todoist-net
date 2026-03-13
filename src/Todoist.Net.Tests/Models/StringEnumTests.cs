@@ -48,9 +48,8 @@ namespace Todoist.Net.Tests.Models
         [Fact]
         public void Deserialize_DictionaryWithStringEnumKeys_IsCaseInsensitive()
         {
-            var dictionary = JsonSerializer.Deserialize<Dictionary<ResourceType, string>>("{\"ALL\":\"value\"}", SerializerOptions);
+            var dictionary = JsonSerializer.Deserialize<Dictionary<ResourceType, string>>("{\"ALL\":\"value\"}", SerializerOptions)!;
 
-            Assert.NotNull(dictionary);
             var entry = Assert.Single(dictionary);
             Assert.Equal(ResourceType.All, entry.Key);
             Assert.Equal("value", entry.Value);
