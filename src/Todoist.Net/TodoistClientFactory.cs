@@ -18,7 +18,7 @@ namespace Todoist.Net
         /// <inheritdoc/>
         public TodoistClient CreateClient(string token)
         {
-            var httpClient = _httpClientFactory.CreateClient(Constants.HttpClientName);
+            var httpClient = _httpClientFactory.CreateClient(ApiConstants.HttpClientName);
             var todoistRestClient = new TodoistRestClient(token, httpClient);
 
             return new TodoistClient(todoistRestClient);

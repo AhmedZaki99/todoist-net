@@ -16,7 +16,7 @@ namespace Todoist.Net.Extensions
         /// <returns>An <see cref="IHttpClientBuilder" /> that can be used to configure the todoist http client.</returns>
         public static IHttpClientBuilder AddTodoistClient(this IServiceCollection services)
         {
-            var builder = services.AddHttpClient(Constants.HttpClientName);
+            var builder = services.AddHttpClient(ApiConstants.HttpClientName);
             services.AddSingleton<ITodoistClientFactory, TodoistClientFactory>();
 
             return builder;

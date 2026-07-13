@@ -1,6 +1,6 @@
 namespace Todoist.Net.Extensions
 {
-    internal static class Constants
+    internal static class ApiConstants
     {
         public const string ApiBaseUrl = "https://api.todoist.com/api/v1/";
 

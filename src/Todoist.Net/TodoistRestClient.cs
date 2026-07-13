@@ -38,7 +38,7 @@ namespace Todoist.Net
             // ReSharper disable once ExceptionNotDocumented
             _httpClient = new HttpClient(httpClientHandler)
             {
-                BaseAddress = new Uri(Constants.ApiBaseUrl)
+                BaseAddress = new Uri(ApiConstants.ApiBaseUrl)
             };
 
             if (!string.IsNullOrEmpty(token))
@@ -53,7 +53,7 @@ namespace Todoist.Net
         {
             _httpClient = httpClient;
 
-            _httpClient.BaseAddress = new Uri(Constants.ApiBaseUrl);
+            _httpClient.BaseAddress = new Uri(ApiConstants.ApiBaseUrl);
             if (!string.IsNullOrEmpty(token))
             {
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
